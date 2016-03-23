@@ -40,7 +40,7 @@
 
 - (void)restoreZoomingScale:(CGFloat)scale
 {
-    [self setZoomScale:scale animated:YES];
+    [self setZoomScale:scale animated:NO];
 }
 
 //实现图片在缩放过程中居中
