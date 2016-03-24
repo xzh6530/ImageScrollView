@@ -34,10 +34,10 @@
         _leftView = [self createSubScrollView:_scrollView.bounds];
         [_scrollView addSubview:_leftView];
         
-        if ([self.imgDataSourceDelegate respondsToSelector:@selector(urlWithIndex:)]) {
-            _leftView.imgUrl = [self.imgDataSourceDelegate urlWithIndex:_index];
-        }else{
+        if ([self.imgDataSourceDelegate respondsToSelector:@selector(imageWithIndex:)]) {
             _leftView.localImage = [self.imgDataSourceDelegate imageWithIndex:_index];
+        }else{
+            _leftView.imgUrl = [self.imgDataSourceDelegate urlWithIndex:_index];
         }
     }else if (_count == 2) {//只有2张图
         _leftView = [self createSubScrollView:_scrollView.bounds];
@@ -73,6 +73,7 @@
         }
         
     }
+    [super viewDidLoad];
     
     self.lab.text = [NSString stringWithFormat:@"%ld/%ld",_index+1,_count];
     [self.exitBtn setTitle:@"退出" forState:UIControlStateNormal];
@@ -91,9 +92,8 @@
     }
 }
 -(void)scrollViewWillEndDragging:(UIScrollView *)scrollView withVelocity:(CGPoint)velocity targetContentOffset:(inout CGPoint *)targetContentOffset{
-    if (_count == 2) {
+    if (_leftView) {
         [_leftView restoreZoomingScale:1];
-        [_centerView restoreZoomingScale:1];
     }
     if (_centerView) {
         [_centerView restoreZoomingScale:1];
@@ -154,6 +154,7 @@
         
         [_scrollView setContentOffset:CGPointMake(_scrollView.frame.size.width, 0)];
     }
+    
     self.lab.text = [NSString stringWithFormat:@"%ld/%ld",_index+1,_count];
 }
 -(UILabel *)lab{
