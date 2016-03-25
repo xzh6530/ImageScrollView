@@ -23,7 +23,6 @@
         self.showsVerticalScrollIndicator = NO;
         self.delegate = self;
         self.bounds = CGRectMake(0, 0, kScreenWidth, kScreenHeight);
-        self.maximumZoomScale = 3;
         self.backgroundColor = [UIColor blackColor];
         self.maxZoom = 3;
         

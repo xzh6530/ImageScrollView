@@ -27,57 +27,15 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    _count = [self.imgDataSourceDelegate totalImageNumber];
-    NSInteger widhtNum  =_count > 3?3:_count;
-    self.scrollView.contentSize = CGSizeMake(self.view.frame.size.width * widhtNum, self.view.frame.size.height);
-    if (_count == 1) {//只有一张图
-        _leftView = [self createSubScrollView:_scrollView.bounds];
-        [_scrollView addSubview:_leftView];
-        
-        if ([self.imgDataSourceDelegate respondsToSelector:@selector(imageWithIndex:)]) {
-            _leftView.localImage = [self.imgDataSourceDelegate imageWithIndex:_index];
-        }else{
-            _leftView.imgUrl = [self.imgDataSourceDelegate urlWithIndex:_index];
-        }
-    }else if (_count == 2) {//只有2张图
-        _leftView = [self createSubScrollView:_scrollView.bounds];
-        [_scrollView addSubview:_leftView];
-        
-        _centerView = [[XZH_ImageScrollView alloc]initWithFrame:CGRectMake(_scrollView.bounds.size.width, 0, _scrollView.bounds.size.width, _scrollView.bounds.size.height)];
-        [_scrollView addSubview:_centerView];
-        
-        if ([self.imgDataSourceDelegate respondsToSelector:@selector(imageWithIndex:)]) {
-            _leftView.localImage = [self.imgDataSourceDelegate imageWithIndex:_index];
-            _centerView.localImage = [self.imgDataSourceDelegate imageWithIndex:_index+1];
-        }else{
-            _leftView.imgUrl = [self.imgDataSourceDelegate urlWithIndex:_index];
-            _centerView.imgUrl = [self.imgDataSourceDelegate urlWithIndex:_index+1];
-        }
-        
+    if (self.imgDataSourceDelegate) {
+        [self initWithDelegate];
     }else{
-        _leftView = [self createSubScrollView:_scrollView.bounds];
-        [_scrollView addSubview:_leftView];
-        
-        _centerView = [self createSubScrollView:CGRectMake(_scrollView.bounds.size.width, 0, _scrollView.bounds.size.width, _scrollView.bounds.size.height)];
-        [_scrollView addSubview:_centerView];
-        
-        _rightView = [self createSubScrollView:CGRectMake(_scrollView.bounds.size.width*2, 0, _scrollView.bounds.size.width, _scrollView.bounds.size.height)];
-        [_scrollView addSubview:_rightView];
-        
-        if (_index == 0) {
-            [self changeImageLeft:_count-1 center:0 right:1];
-        }else if (_index == _count -1){
-            [self changeImageLeft:_index-1 center:_index right:0];
-        }else{
-            [self changeImageLeft:_index-1 center:_index right:_index+1];
-        }
-        
+        [self initWithPropertys];
     }
-    [super viewDidLoad];
-    
     self.lab.text = [NSString stringWithFormat:@"%ld/%ld",_index+1,_count];
     [self.exitBtn setTitle:@"退出" forState:UIControlStateNormal];
 }
+
 
 -(void)imgViewClick{
     NSLog(@"      点击了   %ld",_index);
@@ -92,9 +50,8 @@
     }
 }
 -(void)scrollViewWillEndDragging:(UIScrollView *)scrollView withVelocity:(CGPoint)velocity targetContentOffset:(inout CGPoint *)targetContentOffset{
-    if (_leftView) {
-        [_leftView restoreZoomingScale:1];
-    }
+    
+    [_leftView restoreZoomingScale:1];
     if (_centerView) {
         [_centerView restoreZoomingScale:1];
     }
@@ -142,14 +99,26 @@
 
 - (void)changeImageLeft:(NSInteger)LeftIndex center:(NSInteger)centerIndex right:(NSInteger)rightIndex {
     if (_count > 2) {
-        if ([self.imgDataSourceDelegate respondsToSelector:@selector(imageWithIndex:)]) {//如果是本地图片
-            _leftView.localImage = [self.imgDataSourceDelegate imageWithIndex:LeftIndex ];
-            _centerView.localImage = [self.imgDataSourceDelegate imageWithIndex:centerIndex];
-            _rightView.localImage = [self.imgDataSourceDelegate imageWithIndex:rightIndex];
+        if (self.imgDataSourceDelegate) {
+            if ([self.imgDataSourceDelegate respondsToSelector:@selector(imageWithIndex:)]) {//如果是本地图片
+                _leftView.localImage = [self.imgDataSourceDelegate imageWithIndex:LeftIndex ];
+                _centerView.localImage = [self.imgDataSourceDelegate imageWithIndex:centerIndex];
+                _rightView.localImage = [self.imgDataSourceDelegate imageWithIndex:rightIndex];
+            }else{
+                _leftView.imgUrl = [self.imgDataSourceDelegate urlWithIndex:LeftIndex ];
+                _centerView.imgUrl = [self.imgDataSourceDelegate urlWithIndex:centerIndex];
+                _rightView.imgUrl = [self.imgDataSourceDelegate urlWithIndex:rightIndex];
+            }
         }else{
-            _leftView.imgUrl = [self.imgDataSourceDelegate urlWithIndex:LeftIndex ];
-            _centerView.imgUrl = [self.imgDataSourceDelegate urlWithIndex:centerIndex];
-            _rightView.imgUrl = [self.imgDataSourceDelegate urlWithIndex:rightIndex];
+            if (self.imgUrls) {
+                _leftView.imgUrl = [NSURL URLWithString:self.imgUrls[LeftIndex]];
+                _centerView.imgUrl = [NSURL URLWithString:self.imgUrls[centerIndex]];
+                _rightView.imgUrl = [NSURL URLWithString:_imgUrls[rightIndex]];
+            }else{
+                _leftView.localImage = self.imgArr[LeftIndex];
+                _centerView.localImage = self.imgArr[centerIndex];
+                _rightView.localImage = self.imgArr[rightIndex];
+            }
         }
         
         [_scrollView setContentOffset:CGPointMake(_scrollView.frame.size.width, 0)];
@@ -200,5 +169,109 @@
 }
 -(void)exitImg{
     [self dismissViewControllerAnimated:YES completion:nil];
+}
+
+/**通过属性 传入数据源*/
+-(void)initWithPropertys{
+    if(self.imgUrls.count>0){
+        _count = _imgUrls.count;
+    }else{
+        _count = _imgArr.count;
+    }
+    NSInteger widhtNum  =_count > 3?3:_count;
+    self.scrollView.contentSize = CGSizeMake(self.view.frame.size.width * widhtNum, self.view.frame.size.height);
+    if (_count == 1) {//只有一张图
+        _leftView = [self createSubScrollView:_scrollView.bounds];
+        [_scrollView addSubview:_leftView];
+        
+        if (self.imgUrls) {
+            _leftView.imgUrl = [NSURL URLWithString:self.imgUrls[_index]];
+        }else{
+            _leftView.localImage = self.imgArr[_index];
+        }
+    }else if (_count == 2) {//只有2张图
+        _leftView = [self createSubScrollView:_scrollView.bounds];
+        [_scrollView addSubview:_leftView];
+        
+        _centerView = [[XZH_ImageScrollView alloc]initWithFrame:CGRectMake(_scrollView.bounds.size.width, 0, _scrollView.bounds.size.width, _scrollView.bounds.size.height)];
+        [_scrollView addSubview:_centerView];
+        
+        if (self.imgUrls) {
+            _leftView.imgUrl = [NSURL URLWithString:self.imgUrls[_index]];
+            _centerView.imgUrl = [NSURL URLWithString:self.imgUrls[_index+1]];
+        }else{
+            _leftView.localImage = self.imgArr[_index];
+            _centerView.localImage = self.imgArr[_index+1];
+        }
+        
+    }else{
+        _leftView = [self createSubScrollView:_scrollView.bounds];
+        [_scrollView addSubview:_leftView];
+        
+        _centerView = [self createSubScrollView:CGRectMake(_scrollView.bounds.size.width, 0, _scrollView.bounds.size.width, _scrollView.bounds.size.height)];
+        [_scrollView addSubview:_centerView];
+        
+        _rightView = [self createSubScrollView:CGRectMake(_scrollView.bounds.size.width*2, 0, _scrollView.bounds.size.width, _scrollView.bounds.size.height)];
+        [_scrollView addSubview:_rightView];
+        
+        if (_index == 0) {
+            [self changeImageLeft:_count-1 center:0 right:1];
+        }else if (_index == _count -1){
+            [self changeImageLeft:_index-1 center:_index right:0];
+        }else{
+            [self changeImageLeft:_index-1 center:_index right:_index+1];
+        }
+        
+    }
+}
+
+/**通过代理 传值*/
+-(void)initWithDelegate{
+    _count = [self.imgDataSourceDelegate totalImageNumber];
+    NSInteger widhtNum  =_count > 3?3:_count;
+    self.scrollView.contentSize = CGSizeMake(self.view.frame.size.width * widhtNum, self.view.frame.size.height);
+    if (_count == 1) {//只有一张图
+        _leftView = [self createSubScrollView:_scrollView.bounds];
+        [_scrollView addSubview:_leftView];
+        
+        if ([self.imgDataSourceDelegate respondsToSelector:@selector(imageWithIndex:)]) {
+            _leftView.localImage = [self.imgDataSourceDelegate imageWithIndex:_index];
+        }else{
+            _leftView.imgUrl = [self.imgDataSourceDelegate urlWithIndex:_index];
+        }
+    }else if (_count == 2) {//只有2张图
+        _leftView = [self createSubScrollView:_scrollView.bounds];
+        [_scrollView addSubview:_leftView];
+        
+        _centerView = [[XZH_ImageScrollView alloc]initWithFrame:CGRectMake(_scrollView.bounds.size.width, 0, _scrollView.bounds.size.width, _scrollView.bounds.size.height)];
+        [_scrollView addSubview:_centerView];
+        
+        if ([self.imgDataSourceDelegate respondsToSelector:@selector(imageWithIndex:)]) {
+            _leftView.localImage = [self.imgDataSourceDelegate imageWithIndex:_index];
+            _centerView.localImage = [self.imgDataSourceDelegate imageWithIndex:_index+1];
+        }else{
+            _leftView.imgUrl = [self.imgDataSourceDelegate urlWithIndex:_index];
+            _centerView.imgUrl = [self.imgDataSourceDelegate urlWithIndex:_index+1];
+        }
+        
+    }else{
+        _leftView = [self createSubScrollView:_scrollView.bounds];
+        [_scrollView addSubview:_leftView];
+        
+        _centerView = [self createSubScrollView:CGRectMake(_scrollView.bounds.size.width, 0, _scrollView.bounds.size.width, _scrollView.bounds.size.height)];
+        [_scrollView addSubview:_centerView];
+        
+        _rightView = [self createSubScrollView:CGRectMake(_scrollView.bounds.size.width*2, 0, _scrollView.bounds.size.width, _scrollView.bounds.size.height)];
+        [_scrollView addSubview:_rightView];
+        
+        if (_index == 0) {
+            [self changeImageLeft:_count-1 center:0 right:1];
+        }else if (_index == _count -1){
+            [self changeImageLeft:_index-1 center:_index right:0];
+        }else{
+            [self changeImageLeft:_index-1 center:_index right:_index+1];
+        }
+        
+    }
 }
 @end
