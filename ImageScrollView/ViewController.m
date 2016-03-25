@@ -26,11 +26,13 @@
     
     
 }
+/** 可以通过 代理 或者属性  传入 URL数组  或者 imgae数组
+  属性  和  代理   2选1
+ */
 -(void)lookLook:(id)sender{
     XZH_ImageVC *vc = [[XZH_ImageVC alloc]init];
 //    vc.imgDataSourceDelegate = self;
-    vc.imgArr = [NSMutableArray arrayWithArray:imgs];
-    
+    vc.imgArr = [NSMutableArray arrayWithArray:imgs];//
     [self presentViewController:vc animated:YES completion:nil];
 }
 
